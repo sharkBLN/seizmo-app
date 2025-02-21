@@ -1,4 +1,5 @@
-// Import USGS data service functions
+// Import USGS data service functions and utilities
+import { getCampiFlegeiData, getSantoriniData, getAllVolcanoData } from './usgsDataService.js';
 import { fetchCampiFlegeriData, fetchSantoriniData } from './usgsDataService.js';
 
 // Global variables for charts
@@ -11,24 +12,27 @@ let isLoading = false;
 let lastError = null;
 let selectedVolcano = 'both'; // 'both', 'campi', or 'santorini'
 
-// Fetch data from both locations and combine
+// Fetch data based on selected volcano
 async function fetchVolcanoData() {
     try {
         isLoading = true;
         updateLoadingState();
         
-        const [campiData, santoriniData] = await Promise.all([
-            fetchCampiFlegeriData(),
-            fetchSantoriniData()
-        ]);
+        let data;
+        if (selectedVolcano === 'both') {
+            const result = await getAllVolcanoData();
+            data = [...result.campiFlegrei, ...result.santorini];
+        } else if (selectedVolcano === 'campi') {
+            data = await getCampiFlegeiData();
+        } else {
+            data = await getSantoriniData();
+        }
         
-        const combinedData = [...campiData, ...santoriniData].sort((a, b) => 
-            new Date(b.time) - new Date(a.time)
-        );
+        const sortedData = data.sort((a, b) => new Date(b.time) - new Date(a.time));
         
         isLoading = false;
         lastError = null;
-        return combinedData;
+        return sortedData;
     } catch (error) {
         console.error('Error fetching volcano data:', error);
         isLoading = false;
@@ -383,8 +387,24 @@ function updateCurrentTime() {
 
 // Handle volcano selection change
 function handleVolcanoSelection(volcano) {
+    const buttons = {
+        'both': document.getElementById('select-both'),
+        'campi': document.getElementById('select-campi'),
+        'santorini': document.getElementById('select-santorini')
+    };
+    
+    // Update active state of buttons
+    Object.keys(buttons).forEach(key => {
+        if (buttons[key]) {
+            buttons[key].classList.toggle('active', key === volcano);
+        }
+    });
+    
     selectedVolcano = volcano;
-    fetchAndUpdateCharts();
+    document.getElementById('loading-indicator').style.display = 'block';
+    fetchAndUpdateCharts().finally(() => {
+        document.getElementById('loading-indicator').style.display = 'none';
+    });
 }
 
 // Initialize charts and event listeners when the page loads

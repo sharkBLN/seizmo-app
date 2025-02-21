@@ -29,10 +29,30 @@
         <button class="retry-button">Retry</button>
     </div>
 
-    <!-- Vulkan-Auswahl -->
-    <div class="volcano-selection">
-        <button class="active" data-volcano="campi">Campi Flegrei</button>
-        <button data-volcano="santorini">Santorini</button>
+    <!-- Volcano Selection -->
+    <div class="volcano-selection-container">
+        <div class="volcano-selection">
+            <button id="select-campi" 
+                    class="volcano-btn active" 
+                    data-volcano="campi" 
+                    aria-label="Select Campi Flegrei volcano">
+                Campi Flegrei
+            </button>
+            <button id="select-santorini" 
+                    class="volcano-btn" 
+                    data-volcano="santorini" 
+                    aria-label="Select Santorini volcano">
+                Santorini
+            </button>
+        </div>
+        <div id="campi-loading" class="volcano-loading hidden">
+            <div class="spinner"></div>
+            <p>Loading Campi Flegrei data...</p>
+        </div>
+        <div id="santorini-loading" class="volcano-loading hidden">
+            <div class="spinner"></div>
+            <p>Loading Santorini data...</p>
+        </div>
     </div>
 
     <!-- Hauptbereich -->

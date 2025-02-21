@@ -4,13 +4,15 @@ const VOLCANOES = {
         name: 'Campi Flegrei',
         latitude: 40.827,
         longitude: 14.139,
-        radius: 50 // km
+        radius: 50, // km
+        color: '#2563EB' // Blue for Campi Flegrei
     },
     SANTORINI: {
         name: 'Santorini',
         latitude: 36.4,
         longitude: 25.4,
-        radius: 50 // km
+        radius: 50, // km
+        color: '#FF4B4B' // Red for Santorini
     }
 };
 

@@ -37,29 +37,48 @@ h1 {
     font-size: 1.25rem;
 }
 
-/* Vulkan-Auswahl */
+/* Volcano Selection */
 .volcano-selection {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     margin-bottom: 2rem;
+    justify-content: center;
 }
 
 .volcano-selection button {
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
-    border: none;
-    background-color: #374151;
+    border: 2px solid transparent;
+    background-color: #1F2937;
     color: #BFDBFE;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
+    min-width: 160px;
+}
+
+.volcano-selection button.campi-flegrei {
+    border-color: #2563EB;
+}
+
+.volcano-selection button.santorini {
+    border-color: #FF4B4B;
 }
 
 .volcano-selection button:hover {
-    background-color: #4B5563;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.volcano-selection button.active {
+.volcano-selection button.active.campi-flegrei {
     background-color: #2563EB;
+    color: white;
+}
+
+.volcano-selection button.active.santorini {
+    background-color: #FF4B4B;
+    color: white;
 }
 
 /* Grid Layout */
@@ -206,10 +225,18 @@ td {
     width: 40px;
     height: 40px;
     margin: -20px 0 0 -20px;
-    border: 4px solid #60A5FA;
-    border-right-color: transparent;
     border-radius: 50%;
     animation: spinner 1s linear infinite;
+}
+
+.loading.campi-flegrei::after {
+    border: 4px solid #2563EB;
+    border-right-color: transparent;
+}
+
+.loading.santorini::after {
+    border: 4px solid #FF4B4B;
+    border-right-color: transparent;
 }
 
 @keyframes spinner {
@@ -229,6 +256,12 @@ td {
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.loading-overlay.visible {
+    opacity: 1;
 }
 
 .loading-row td {
