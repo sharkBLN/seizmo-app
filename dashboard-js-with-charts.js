@@ -1,6 +1,8 @@
 // Import USGS data service functions and utilities
-import { getCampiFlegeiData, getSantoriniData, getAllVolcanoData } from './usgsDataService.js';
-import { fetchCampiFlegeriData, fetchSantoriniData } from './usgsDataService.js';
+import { getCampiFlegeiData, getSantoriniData } from './usgsDataService.js';
+
+// Import Chart.js
+import Chart from 'chart.js/auto';
 
 // Global variables for charts
 let magnitudeChart = null;
@@ -153,46 +155,7 @@ function updateMagnitudeDistribution(data) {
         }
     });
 }
-    },
-        React.createElement(Recharts.CartesianGrid, { strokeDasharray: "3 3", stroke: "#333" }),
-        React.createElement(Recharts.XAxis, {
-            type: "number",
-            dataKey: "depth",
-            name: "Depth",
-            unit: "km",
-            stroke: "#9CA3AF"
-        }),
-        React.createElement(Recharts.YAxis, {
-            type: "number",
-            dataKey: "magnitude",
-            name: "Magnitude",
-            stroke: "#9CA3AF"
-        }),
-        React.createElement(Recharts.Tooltip, {
-            contentStyle: {
-                backgroundColor: '#1F2937',
-                border: 'none',
-                borderRadius: '0.375rem',
-                color: '#BFDBFE'
-            }
-        }),
-        React.createElement(Recharts.Legend),
-        React.createElement(Recharts.Scatter, {
-            name: 'Campi Flegrei',
-            data: data.filter(d => d.location.includes('Campi Flegrei')),
-            fill: "#2563EB",
-            r: 5
-        }),
-        React.createElement(Recharts.Scatter, {
-            name: 'Santorini',
-            data: data.filter(d => d.location.includes('Santorini')),
-            fill: "#FF4B4B",
-            r: 5
-        })
-    );
-
-    ReactDOM.render(chart, container);
-}
+    }
 
 // Magnitude vs. Time Chart
 function updateTimeDistribution(data) {
@@ -238,43 +201,6 @@ function updateTimeDistribution(data) {
             }
         }
     });
-}
-        width: container.offsetWidth,
-        height: container.offsetHeight,
-        data: data,
-        margin: { top: 10, right: 30, left: 0, bottom: 0 }
-    },
-        React.createElement(Recharts.CartesianGrid, { strokeDasharray: "3 3", stroke: "#333" }),
-        React.createElement(Recharts.XAxis, {
-            dataKey: "time",
-            type: "number",
-            scale: "time",
-            domain: ['auto', 'auto'],
-            tickFormatter: (unixTime) => new Date(unixTime).toLocaleTimeString(),
-            stroke: "#9CA3AF"
-        }),
-        React.createElement(Recharts.YAxis, {
-            stroke: "#9CA3AF"
-        }),
-        React.createElement(Recharts.Tooltip, {
-            contentStyle: {
-                backgroundColor: '#1F2937',
-                border: 'none',
-                borderRadius: '0.375rem',
-                color: '#BFDBFE'
-            },
-            labelFormatter: (value) => new Date(value).toLocaleString()
-        }),
-        React.createElement(Recharts.Line, {
-            type: "monotone",
-            dataKey: "magnitude",
-            stroke: "#0088FE",
-            strokeWidth: 2,
-            dot: false
-        })
-    );
-
-    ReactDOM.render(chart, container);
 }
 
 // Magnitude Analysis Chart
@@ -427,62 +353,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize automatic data refresh
     initializeDataRefresh();
 });
-        width: container.offsetWidth,
-        height: container.offsetHeight,
-        data: analysisData,
-        margin: { top: 10, right: 30, left: 0, bottom: 0 }
-    },
-        React.createElement(Recharts.CartesianGrid, { strokeDasharray: "3 3", stroke: "#333" }),
-        React.createElement(Recharts.XAxis, {
-            dataKey: "time",
-            type: "number",
-            scale: "time",
-            domain: ['auto', 'auto'],
-            tickFormatter: (unixTime) => new Date(unixTime).toLocaleTimeString(),
-            stroke: "#9CA3AF"
-        }),
-        React.createElement(Recharts.YAxis, {
-            stroke: "#9CA3AF"
-        }),
-        React.createElement(Recharts.Tooltip, {
-            contentStyle: {
-                backgroundColor: '#1F2937',
-                border: 'none',
-                borderRadius: '0.375rem',
-                color: '#BFDBFE'
-            },
-            labelFormatter: (value) => new Date(value).toLocaleString()
-        }),
-        React.createElement(Recharts.Area, {
-            type: "monotone",
-            dataKey: "magnitude",
-            stroke: "#00FFF3",
-            fill: "#00FFF3",
-            fillOpacity: 0.1
-        }),
-        React.createElement(Recharts.Line, {
-            type: "monotone",
-            dataKey: "avg",
-            stroke: "#FF0088",
-            strokeWidth: 2,
-            dot: false
-        })
-    );
 
-    ReactDOM.render(chart, container);
-}
-
-// Hilfsfunktion: Berechnung gleitender Durchschnitt
-function calculateMovingAverage(data, window) {
-    return data.map((_, index) => {
-        const start = Math.max(0, index - Math.floor(window / 2));
-        const end = Math.min(data.length, index + Math.floor(window / 2) + 1);
-        const values = data.slice(start, end);
-        return values.reduce((sum, val) => sum + val, 0) / values.length;
-    });
-}
-
-// Initialize the dashboard when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    initializeDataRefresh();
-});

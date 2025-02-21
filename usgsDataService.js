@@ -32,7 +32,7 @@ let lastRequestTime = 0;
 * @param {number} daysBack - Number of days of data to fetch
 * @returns {Promise<Array>} - Processed earthquake data
 */
-async function fetchEarthquakeData(location, daysBack = 30) {
+export async function fetchEarthquakeData
     const startTime = new Date();
     startTime.setDate(startTime.getDate() - daysBack);
     
@@ -165,37 +165,21 @@ export async function getCampiFlegeiData(daysBack = 30) {
     return fetchEarthquakeData(VOLCANOES.CAMPI_FLEGREI, daysBack);
 }
 
-/**
-* Gets earthquake data for Santorini
-* @param {number} daysBack - Number of days of data to fetch
-*/
 export async function getSantoriniData(daysBack = 30) {
     return fetchEarthquakeData(VOLCANOES.SANTORINI, daysBack);
 }
 
-/**
-* Gets combined earthquake data for both locations
-* @param {number} daysBack - Number of days of data to fetch
-*/
 export async function getAllVolcanoData(daysBack = 30) {
-    try {
-        const [campiFlegeiData, santoriniData] = await Promise.all([
-            getCampiFlegeiData(daysBack),
-            getSantoriniData(daysBack)
-        ]);
-        
-        return {
-            campiFlegrei: campiFlegeiData,
-            santorini: santoriniData
-        };
-    } catch (error) {
-        console.error('Error fetching combined volcano data:', error);
-        return {
-            campiFlegrei: [],
-            santorini: []
-        };
-    }
+    const [campiFlegrei, santorini] = await Promise.all([
+        getCampiFlegeiData(daysBack),
+        getSantoriniData(daysBack)
+    ]);
+    return [...campiFlegrei, ...santorini];
 }
+
+// Aliases for backward compatibility
+export const fetchCampiFlegeriData = getCampiFlegeiData;
+export const fetchSantoriniData = getSantoriniData;
 
 /**
 * Filters earthquake data based on given criteria
@@ -203,54 +187,6 @@ export async function getAllVolcanoData(daysBack = 30) {
 * @param {Object} filters - Filter criteria
 * @returns {Array} - Filtered earthquake data
 */
-export function filterEarthquakeData(data, filters = {}) {
-    const {
-        minMagnitude = 0,
-        maxMagnitude = 10,
-        minDepth,
-        maxDepth,
-        startDate,
-        endDate,
-        maxDistance
-    } = filters;
-
-    return data.filter(quake => {
-        if (quake.magnitude < minMagnitude || quake.magnitude > maxMagnitude) return false;
-        if (minDepth && quake.depth < minDepth) return false;
-        if (maxDepth && quake.depth > maxDepth) return false;
-        if (startDate && quake.time < new Date(startDate)) return false;
-        if (endDate && quake.time > new Date(endDate)) return false;
-        if (maxDistance && quake.distanceFromVolcano > maxDistance) return false;
-        return true;
-    });
-}
-
-/**
-* Sorts earthquake data by specified criteria
-* @param {Array} data - Array of earthquake data objects
-* @param {string} sortBy - Field to sort by
-* @param {boolean} ascending - Sort direction
-* @returns {Array} - Sorted earthquake data
-*/
-export function sortEarthquakeData(data, sortBy = 'time', ascending = false) {
-    const sortedData = [...data];
-    sortedData.sort((a, b) => {
-        const valA = a[sortBy];
-        const valB = b[sortBy];
-        if (valA < valB) return ascending ? -1 : 1;
-        if (valA > valB) return ascending ? 1 : -1;
-        return 0;
-    });
-    return sortedData;
-}
-
-export const defaultFilters = {
-    minMagnitude: 1.0,
-    maxMagnitude: 10.0,
-    maxDistance: 50, // km
-    startDate: null,
-    endDate: null
-};
 
 export const constants = {
     volcanoes: VOLCANOES,

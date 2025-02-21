@@ -98,25 +98,21 @@
         </div>
 
         <!-- Analyse-Bereich -->
+        <!-- Analyse-Bereich -->
         <div class="analysis-row">
             <section class="analysis-box">
                 <h3>PATTERN ANALYSIS</h3>
-                <div id="pattern-chart" class="chart"></div>
+                <canvas id="magnitude-chart" class="chart"></canvas>
             </section>
 
             <section class="analysis-box">
                 <h3>MAGNITUDE VS. TIME</h3>
-                <div id="magnitude-time-chart" class="chart"></div>
+                <canvas id="time-chart" class="chart"></canvas>
             </section>
 
             <section class="analysis-box">
-                <h3>MAGNITUDE ANALYSIS</h3>
-                <div id="magnitude-analysis-chart" class="chart"></div>
-            </section>
-
-            <section class="analysis-box">
-                <h3>AI ANALYSIS</h3>
-                <div id="ai-analysis-chart" class="chart"></div>
+                <h3>DEPTH ANALYSIS</h3>
+                <canvas id="depth-chart" class="chart"></canvas>
             </section>
         </div>
 
@@ -147,8 +143,6 @@
 
     <!-- Dashboard Funktionalität -->
     <!-- Dashboard Functionality -->
-    <script type="module" src="usgsDataService.js"></script>
-    <script type="module" src="dashboard-js-with-charts.js"></script>
     
     <!-- Cache buster for development -->
     <script>
@@ -156,5 +150,8 @@
             script.src = script.src + '?v=' + new Date().getTime();
         });
     </script>
+
+    <script type="module" src="usgsDataService.js"></script>
+    <script type="module" src="dashboard-js-with-charts.js?v=${new Date().getTime()}"></script>
     </body>
 </html>
