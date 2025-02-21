@@ -1,6 +1,11 @@
 import { getCampiFlegeiData, getSantoriniData } from './usgsDataService.js';
 
-// Chart configuration and initialization
+// Global state variables
+let selectedVolcano = 'campi'; // 'campi' or 'santorini'
+let isLoading = false;
+let lastError = null;
+
+// Chart configuration for seismic data visualization
 const chartConfig = {
     type: 'scatter',
     options: {
@@ -106,12 +111,6 @@ setInterval(() => {
     updateChartData(santoriniChart, getSantoriniData, 'santorini-loading');
 }, 5 * 60 * 1000);
 
-import { getCampiFlegeiData, getSantoriniData } from './usgsDataService.js';
-
-// Initialize date range (last 30 days)
-const endDate = new Date();
-const startDate = new Date();
-startDate.setDate(startDate.getDate() - 30);
 
 // Function to create a scatter plot
 function createScatterPlot(data, canvasId, title) {
@@ -193,11 +192,6 @@ async function initializeCharts() {
 // Initialize charts when the page loads
 document.addEventListener('DOMContentLoaded', initializeCharts);
 
-// Import USGS data service functions and utilities
-import { getCampiFlegeiData, getSantoriniData } from './usgsDataService.js';
-
-// Import Chart.js
-// Chart.js is loaded globally
 
 // Global variables for charts
 let magnitudeChart = null;
@@ -352,7 +346,28 @@ function updateMagnitudeDistribution(data) {
 }
     }
 
-// Magnitude vs. Time Chart
+    // Populate event table with the latest earthquake data
+    function updateEventTable(events) {
+        const tableBody = document.getElementById('event-table-body');
+        if (!tableBody) return;
+
+        // Clear existing rows
+        tableBody.innerHTML = '';
+
+        // Add new rows
+        events.slice(0, 10).forEach(event => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-4 py-2">${new Date(event.time).toLocaleString()}</td>
+                <td class="px-4 py-2">${event.magnitude.toFixed(1)}</td>
+                <td class="px-4 py-2">${event.depth.toFixed(1)}</td>
+                <td class="px-4 py-2">${event.location || 'Unknown'}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Magnitude vs. Time Chart
 function updateTimeDistribution(data) {
     const ctx = document.getElementById('time-chart').getContext('2d');
     
@@ -457,43 +472,6 @@ function updateDepthDistribution(data) {
             }
         }
     });
-}
-        width: container.offsetWidth,
-        height: container.offsetHeight,
-        data: data,
-        margin: { top: 10, right: 30, left: 0, bottom: 0 }
-    },
-        React.createElement(Recharts.CartesianGrid, { strokeDasharray: "3 3", stroke: "#333" }),
-        React.createElement(Recharts.XAxis, {
-            dataKey: "time",
-            type: "number",
-            scale: "time",
-            domain: ['auto', 'auto'],
-            tickFormatter: (unixTime) => new Date(unixTime).toLocaleTimeString(),
-            stroke: "#9CA3AF"
-        }),
-        React.createElement(Recharts.YAxis, {
-            stroke: "#9CA3AF"
-        }),
-        React.createElement(Recharts.Tooltip, {
-            contentStyle: {
-                backgroundColor: '#1F2937',
-                border: 'none',
-                borderRadius: '0.375rem',
-                color: '#BFDBFE'
-            },
-            labelFormatter: (value) => new Date(value).toLocaleString()
-        }),
-        React.createElement(Recharts.Area, {
-            type: "monotone",
-            dataKey: "magnitude",
-            stroke: "#00FFF3",
-            fill: "#00FFF3",
-            fillOpacity: 0.1
-        })
-    );
-
-    ReactDOM.render(chart, container);
 }
 
 function updateCurrentTime() {
