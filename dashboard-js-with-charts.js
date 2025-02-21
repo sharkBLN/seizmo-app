@@ -1,37 +1,157 @@
-// [Vorheriger Code bleibt gleich bis zu den Chart-Funktionen]
+// Import USGS data service functions
+import { fetchCampiFlegeriData, fetchSantoriniData } from './usgsDataService.js';
+
+// Global variables for charts
+let magnitudeChart = null;
+let timeChart = null;
+let depthChart = null;
+
+// Global state for loading and error handling
+let isLoading = false;
+let lastError = null;
+let selectedVolcano = 'both'; // 'both', 'campi', or 'santorini'
+
+// Fetch data from both locations and combine
+async function fetchVolcanoData() {
+    try {
+        isLoading = true;
+        updateLoadingState();
+        
+        const [campiData, santoriniData] = await Promise.all([
+            fetchCampiFlegeriData(),
+            fetchSantoriniData()
+        ]);
+        
+        const combinedData = [...campiData, ...santoriniData].sort((a, b) => 
+            new Date(b.time) - new Date(a.time)
+        );
+        
+        isLoading = false;
+        lastError = null;
+        return combinedData;
+    } catch (error) {
+        console.error('Error fetching volcano data:', error);
+        isLoading = false;
+        lastError = error.message;
+        updateErrorState();
+        return [];
+    } finally {
+        updateLoadingState();
+    }
+}
+
+// Handle loading state updates
+function updateLoadingState() {
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = isLoading ? 'block' : 'none';
+    }
+}
+
+// Handle error state updates
+function updateErrorState() {
+    const errorDisplay = document.getElementById('error-display');
+    if (errorDisplay) {
+        errorDisplay.textContent = lastError || '';
+        errorDisplay.style.display = lastError ? 'block' : 'none';
+    }
+}
+
+// Initialize automatic data refresh
+function initializeDataRefresh() {
+    // Initial load
+    fetchAndUpdateCharts();
+    
+    // Refresh every 5 minutes
+    setInterval(fetchAndUpdateCharts, 5 * 60 * 1000);
+}
+
+// Fetch data and update charts
+async function fetchAndUpdateCharts() {
+    const data = await fetchVolcanoData();
+    if (data.length > 0) {
+        updateCharts(data);
+    }
+}
 
 // Charts aktualisieren
 function updateCharts(events) {
     if (!events || !events.length) return;
 
-    // Daten für die Charts vorbereiten
     const chartData = prepareChartData(events);
     
-    // Alle Charts aktualisieren
-    updatePatternChart(chartData);
-    updateMagnitudeTimeChart(chartData);
-    updateMagnitudeAnalysisChart(chartData);
-    updateAIAnalysisChart(chartData);
+    // Update all charts
+    updateMagnitudeDistribution(chartData);
+    updateTimeDistribution(chartData);
+    updateDepthDistribution(chartData);
+    
+    // Update current time display
+    updateCurrentTime();
 }
 
 // Daten für Charts vorbereiten
 function prepareChartData(events) {
-    return events.slice(0, 20).map(event => ({
-        time: new Date(event.time).getTime(),
+    return events.map(event => ({
+        time: new Date(event.time),
         magnitude: parseFloat(event.magnitude),
-        depth: parseFloat(event.depth)
-    })).reverse();
+        depth: parseFloat(event.depth),
+        location: event.location || 'Unknown',
+        coordinates: event.coordinates || []
+    })).sort((a, b) => b.time - a.time);
 }
 
 // Pattern Analysis Chart
-function updatePatternChart(data) {
-    const container = document.getElementById('pattern-chart');
-    if (!container) return;
+function updateMagnitudeDistribution(data) {
+    const ctx = document.getElementById('magnitude-chart').getContext('2d');
+    
+    const magnitudes = data.map(d => d.magnitude);
+    const labels = Array.from(new Set(magnitudes)).sort();
+    const counts = labels.map(mag => 
+        data.filter(d => d.magnitude === mag).length
+    );
 
-    const chart = React.createElement(Recharts.ScatterChart, {
-        width: container.offsetWidth,
-        height: container.offsetHeight,
-        margin: { top: 10, right: 30, left: 0, bottom: 0 }
+    if (magnitudeChart) {
+        magnitudeChart.destroy();
+    }
+
+    magnitudeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Magnitude Distribution',
+                data: counts,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Events'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Magnitude'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Earthquake Magnitude Distribution'
+                }
+            }
+        }
+    });
+}
     },
         React.createElement(Recharts.CartesianGrid, { strokeDasharray: "3 3", stroke: "#333" }),
         React.createElement(Recharts.XAxis, {
@@ -55,9 +175,17 @@ function updatePatternChart(data) {
                 color: '#BFDBFE'
             }
         }),
+        React.createElement(Recharts.Legend),
         React.createElement(Recharts.Scatter, {
-            data: data,
+            name: 'Campi Flegrei',
+            data: data.filter(d => d.location.includes('Campi Flegrei')),
             fill: "#2563EB",
+            r: 5
+        }),
+        React.createElement(Recharts.Scatter, {
+            name: 'Santorini',
+            data: data.filter(d => d.location.includes('Santorini')),
+            fill: "#FF4B4B",
             r: 5
         })
     );
@@ -66,11 +194,50 @@ function updatePatternChart(data) {
 }
 
 // Magnitude vs. Time Chart
-function updateMagnitudeTimeChart(data) {
-    const container = document.getElementById('magnitude-time-chart');
-    if (!container) return;
+function updateTimeDistribution(data) {
+    const ctx = document.getElementById('time-chart').getContext('2d');
+    
+    if (timeChart) {
+        timeChart.destroy();
+    }
 
-    const chart = React.createElement(Recharts.LineChart, {
+    timeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.time.toLocaleString()),
+            datasets: [{
+                label: 'Magnitude over Time',
+                data: data.map(d => d.magnitude),
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Magnitude'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Earthquake Magnitude Timeline'
+                }
+            }
+        }
+    });
+}
         width: container.offsetWidth,
         height: container.offsetHeight,
         data: data,
@@ -110,11 +277,65 @@ function updateMagnitudeTimeChart(data) {
 }
 
 // Magnitude Analysis Chart
-function updateMagnitudeAnalysisChart(data) {
-    const container = document.getElementById('magnitude-analysis-chart');
-    if (!container) return;
+function updateDepthDistribution(data) {
+    const ctx = document.getElementById('depth-chart').getContext('2d');
+    
+    if (depthChart) {
+        depthChart.destroy();
+    }
 
-    const chart = React.createElement(Recharts.AreaChart, {
+    // Create depth ranges
+    const depthRanges = [];
+    const rangeSize = 10; // 10km ranges
+    const maxDepth = Math.ceil(Math.max(...data.map(d => d.depth)) / rangeSize) * rangeSize;
+    
+    for (let i = 0; i <= maxDepth; i += rangeSize) {
+        depthRanges.push(`${i}-${i + rangeSize}`);
+    }
+
+    const depthCounts = depthRanges.map(range => {
+        const [min, max] = range.split('-').map(Number);
+        return data.filter(d => d.depth >= min && d.depth < max).length;
+    });
+
+    depthChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: depthRanges,
+            datasets: [{
+                label: 'Depth Distribution',
+                data: depthCounts,
+                backgroundColor: 'rgba(153, 102, 255, 0.5)',
+                borderColor: 'rgb(153, 102, 255)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Events'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Depth Range (km)'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Earthquake Depth Distribution'
+                }
+            }
+        }
+    });
+}
         width: container.offsetWidth,
         height: container.offsetHeight,
         data: data,
@@ -153,19 +374,32 @@ function updateMagnitudeAnalysisChart(data) {
     ReactDOM.render(chart, container);
 }
 
-// AI Analysis Chart (kombinierte Visualisierung)
-function updateAIAnalysisChart(data) {
-    const container = document.getElementById('ai-analysis-chart');
-    if (!container) return;
+function updateCurrentTime() {
+    const timeDisplay = document.getElementById('current-time');
+    if (timeDisplay) {
+        timeDisplay.textContent = new Date().toLocaleString();
+    }
+}
 
-    // Berechne gleitenden Durchschnitt
-    const movingAverage = calculateMovingAverage(data.map(d => d.magnitude), 3);
-    const analysisData = data.map((d, i) => ({
-        ...d,
-        avg: movingAverage[i]
-    }));
+// Handle volcano selection change
+function handleVolcanoSelection(volcano) {
+    selectedVolcano = volcano;
+    fetchAndUpdateCharts();
+}
 
-    const chart = React.createElement(Recharts.ComposedChart, {
+// Initialize charts and event listeners when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize buttons
+    document.getElementById('select-both')?.addEventListener('click', () => handleVolcanoSelection('both'));
+    document.getElementById('select-campi')?.addEventListener('click', () => handleVolcanoSelection('campi'));
+    document.getElementById('select-santorini')?.addEventListener('click', () => handleVolcanoSelection('santorini'));
+    
+    // Start data refresh
+    initializeDataRefresh();
+    
+    // Update current time every second
+    setInterval(updateCurrentTime, 1000);
+});
         width: container.offsetWidth,
         height: container.offsetHeight,
         data: analysisData,
@@ -221,4 +455,7 @@ function calculateMovingAverage(data, window) {
     });
 }
 
-// [Rest des vorherigen Codes bleibt gleich]
+// Initialize the dashboard when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initializeDataRefresh();
+});

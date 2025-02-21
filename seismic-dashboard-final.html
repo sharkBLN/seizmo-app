@@ -7,14 +7,10 @@
     
     <!-- Styling -->
     <link rel="stylesheet" href="final-styles.css">
-    
-    <!-- React und ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Recharts -->
-    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
-</head>
+        
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
 <body>
     <!-- Header Bereich -->
     <header>
@@ -24,6 +20,14 @@
         </div>
         <p class="current-time">00:00:00</p>
     </header>
+    <div id="loading-indicator" class="status-indicator loading">
+        <div class="spinner"></div>
+        <p>Fetching seismic data...</p>
+    </div>
+    <div id="error-display" class="status-indicator error">
+        <p class="error-message"></p>
+        <button class="retry-button">Retry</button>
+    </div>
 
     <!-- Vulkan-Auswahl -->
     <div class="volcano-selection">
@@ -121,6 +125,15 @@
     </footer>
 
     <!-- Dashboard Funktionalität -->
-    <script src="dashboard-js-with-charts.js"></script>
-</body>
+    <!-- Dashboard Functionality -->
+    <script type="module" src="usgsDataService.js"></script>
+    <script type="module" src="dashboard-js-with-charts.js"></script>
+    
+    <!-- Cache buster for development -->
+    <script>
+        document.querySelectorAll('script[type="module"]').forEach(script => {
+            script.src = script.src + '?v=' + new Date().getTime();
+        });
+    </script>
+    </body>
 </html>
