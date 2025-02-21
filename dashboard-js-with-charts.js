@@ -10,7 +10,7 @@ let depthChart = null;
 // Global state for loading and error handling
 let isLoading = false;
 let lastError = null;
-let selectedVolcano = 'both'; // 'both', 'campi', or 'santorini'
+let selectedVolcano = 'campi'; // 'campi' or 'santorini'
 
 // Fetch data based on selected volcano
 async function fetchVolcanoData() {
@@ -19,10 +19,7 @@ async function fetchVolcanoData() {
         updateLoadingState();
         
         let data;
-        if (selectedVolcano === 'both') {
-            const result = await getAllVolcanoData();
-            data = [...result.campiFlegrei, ...result.santorini];
-        } else if (selectedVolcano === 'campi') {
+        if (selectedVolcano === 'campi') {
             data = await getCampiFlegeiData();
         } else {
             data = await getSantoriniData();
@@ -379,9 +376,14 @@ function updateDepthDistribution(data) {
 }
 
 function updateCurrentTime() {
-    const timeDisplay = document.getElementById('current-time');
+    const timeDisplay = document.querySelector('.current-time');
     if (timeDisplay) {
         timeDisplay.textContent = new Date().toLocaleString();
+    }
+    
+    const lastUpdateSpan = document.getElementById('last-update');
+    if (lastUpdateSpan) {
+        lastUpdateSpan.textContent = new Date().toLocaleString();
     }
 }
 
@@ -409,16 +411,21 @@ function handleVolcanoSelection(volcano) {
 
 // Initialize charts and event listeners when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize buttons
-    document.getElementById('select-both')?.addEventListener('click', () => handleVolcanoSelection('both'));
+    // Initialize time immediately
+    updateCurrentTime();
+    
+    // Set up volcano selection buttons
     document.getElementById('select-campi')?.addEventListener('click', () => handleVolcanoSelection('campi'));
     document.getElementById('select-santorini')?.addEventListener('click', () => handleVolcanoSelection('santorini'));
     
-    // Start data refresh
-    initializeDataRefresh();
+    // Start with Campi Flegrei selected
+    handleVolcanoSelection('campi');
     
     // Update current time every second
     setInterval(updateCurrentTime, 1000);
+    
+    // Initialize automatic data refresh
+    initializeDataRefresh();
 });
         width: container.offsetWidth,
         height: container.offsetHeight,
