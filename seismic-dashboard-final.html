@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volcanic Monitoring System</title>
+    
+    <!-- Styling -->
+    <link rel="stylesheet" href="final-styles.css">
+    
+    <!-- React und ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Recharts -->
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+</head>
+<body>
+    <!-- Header Bereich -->
+    <header>
+        <div>
+            <h1>REAL-TIME SEISMIC MONITORING</h1>
+            <p class="subtitle">Volcanic Activity Dashboard</p>
+        </div>
+        <p class="current-time">00:00:00</p>
+    </header>
+
+    <!-- Vulkan-Auswahl -->
+    <div class="volcano-selection">
+        <button class="active" data-volcano="campi">Campi Flegrei</button>
+        <button data-volcano="santorini">Santorini</button>
+    </div>
+
+    <!-- Hauptbereich -->
+    <main>
+        <!-- Obere Reihe -->
+        <div class="top-row">
+            <!-- Hauptstatus -->
+            <section class="main-stats">
+                <div class="magnitude-display">
+                    <p class="magnitude-value">3.22</p>
+                    <div class="magnitude-circle"></div>
+                </div>
+            </section>
+
+            <!-- Kartenbereich -->
+            <section class="map-area">
+                <h2>Campi Flegrei Region</h2>
+                <div id="map">
+                    <!-- Map wird hier eingefügt -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Metriken-Reihe -->
+        <div class="metrics-row">
+            <div class="metric-box">
+                <h3>MAGNITUDE</h3>
+                <p id="metric-magnitude">2.20</p>
+            </div>
+            <div class="metric-box">
+                <h3>LOCATION</h3>
+                <p id="metric-location">Campi Flegrei</p>
+            </div>
+            <div class="metric-box">
+                <h3>DEPTH</h3>
+                <p id="metric-depth">3.88 km</p>
+            </div>
+            <div class="metric-box">
+                <h3>ACTIVITY LEVEL</h3>
+                <p id="metric-activity">Normal</p>
+            </div>
+        </div>
+
+        <!-- Analyse-Bereich -->
+        <div class="analysis-row">
+            <section class="analysis-box">
+                <h3>PATTERN ANALYSIS</h3>
+                <div id="pattern-chart" class="chart"></div>
+            </section>
+
+            <section class="analysis-box">
+                <h3>MAGNITUDE VS. TIME</h3>
+                <div id="magnitude-time-chart" class="chart"></div>
+            </section>
+
+            <section class="analysis-box">
+                <h3>MAGNITUDE ANALYSIS</h3>
+                <div id="magnitude-analysis-chart" class="chart"></div>
+            </section>
+
+            <section class="analysis-box">
+                <h3>AI ANALYSIS</h3>
+                <div id="ai-analysis-chart" class="chart"></div>
+            </section>
+        </div>
+
+        <!-- Ereignistabelle -->
+        <section class="events-table">
+            <h2>Recent Events</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Magnitude</th>
+                        <th>Depth</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody id="events-tbody">
+                    <tr class="loading-row">
+                        <td colspan="4">Loading data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>Last Updated: <span id="last-update">Initializing...</span></p>
+    </footer>
+
+    <!-- Dashboard Funktionalität -->
+    <script src="dashboard-js-with-charts.js"></script>
+</body>
+</html>
