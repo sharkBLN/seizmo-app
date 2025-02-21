@@ -1,8 +1,203 @@
+import { getCampiFlegeiData, getSantoriniData } from './usgsDataService.js';
+
+// Chart configuration and initialization
+const chartConfig = {
+    type: 'scatter',
+    options: {
+        responsive: true,
+        animation: false,
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const point = context.raw;
+                        return `Magnitude: ${point.y.toFixed(1)}, Depth: ${point.depth.toFixed(1)}km`;
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                type: 'time',
+                time: {
+                    unit: 'day'
+                },
+                title: {
+                    display: true,
+                    text: 'Date'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Magnitude'
+                },
+                reverse: false
+            }
+        }
+    }
+};
+
+// Initialize charts
+const campiFlegeiCtx = document.getElementById('campi-flegrei-chart').getContext('2d');
+const santoriniCtx = document.getElementById('santorini-chart').getContext('2d');
+
+const campiFlegeiChart = new Chart(campiFlegeiCtx, {
+    ...chartConfig,
+    data: {
+        datasets: [{
+            label: 'Earthquakes',
+            backgroundColor: 'rgba(37, 99, 235, 0.5)',
+            borderColor: 'rgba(37, 99, 235, 1)',
+            data: []
+        }]
+    }
+});
+
+const santoriniChart = new Chart(santoriniCtx, {
+    ...chartConfig,
+    data: {
+        datasets: [{
+            label: 'Earthquakes',
+            backgroundColor: 'rgba(255, 75, 75, 0.5)',
+            borderColor: 'rgba(255, 75, 75, 1)',
+            data: []
+        }]
+    }
+});
+
+// Data processing and update functions
+function processData(earthquakes) {
+    return earthquakes.map(quake => ({
+        x: quake.time,
+        y: quake.magnitude,
+        depth: quake.depth
+    }));
+}
+
+async function updateChartData(chart, getData, loadingId) {
+    const loadingElement = document.getElementById(loadingId);
+    loadingElement.style.display = 'block';
+    
+    try {
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30); // Last 30 days
+        
+        const data = await getData(startDate, endDate);
+        const processedData = processData(data);
+        
+        chart.data.datasets[0].data = processedData;
+        chart.update();
+        loadingElement.style.display = 'none';
+    } catch (error) {
+        console.error('Error updating chart:', error);
+        loadingElement.textContent = 'Error loading data. Please try again later.';
+    }
+}
+
+// Initial data load
+updateChartData(campiFlegeiChart, getCampiFlegeiData, 'campi-flegrei-loading');
+updateChartData(santoriniChart, getSantoriniData, 'santorini-loading');
+
+// Set up automatic refresh every 5 minutes
+setInterval(() => {
+    updateChartData(campiFlegeiChart, getCampiFlegeiData, 'campi-flegrei-loading');
+    updateChartData(santoriniChart, getSantoriniData, 'santorini-loading');
+}, 5 * 60 * 1000);
+
+import { getCampiFlegeiData, getSantoriniData } from './usgsDataService.js';
+
+// Initialize date range (last 30 days)
+const endDate = new Date();
+const startDate = new Date();
+startDate.setDate(startDate.getDate() - 30);
+
+// Function to create a scatter plot
+function createScatterPlot(data, canvasId, title) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    
+    const chartData = {
+        datasets: [{
+            label: 'Earthquakes',
+            data: data.map(quake => ({
+                x: quake.time,
+                y: quake.depth,
+                r: quake.magnitude * 3 // Size based on magnitude
+            })),
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+        }]
+    };
+
+    const config = {
+        type: 'bubble',
+        data: chartData,
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: title
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const data = context.raw;
+                            return `Time: ${new Date(data.x).toLocaleString()}\nDepth: ${data.y.toFixed(2)} km\nMagnitude: ${(data.r/3).toFixed(1)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    reverse: true,
+                    title: {
+                        display: true,
+                        text: 'Depth (km)'
+                    }
+                }
+            }
+        }
+    };
+
+    return new Chart(ctx, config);
+}
+
+// Function to initialize both charts
+async function initializeCharts() {
+    try {
+        // Fetch data for both locations
+        const campiFlegeiData = await getCampiFlegeiData(startDate, endDate);
+        const santoriniData = await getSantoriniData(startDate, endDate);
+
+        // Create charts
+        createScatterPlot(campiFlegeiData, 'campi-flegrei-chart', 'Campi Flegrei Seismic Activity');
+        createScatterPlot(santoriniData, 'santorini-chart', 'Santorini Seismic Activity');
+
+    } catch (error) {
+        console.error('Error initializing charts:', error);
+    }
+}
+
+// Initialize charts when the page loads
+document.addEventListener('DOMContentLoaded', initializeCharts);
+
 // Import USGS data service functions and utilities
 import { getCampiFlegeiData, getSantoriniData } from './usgsDataService.js';
 
 // Import Chart.js
-import Chart from 'chart.js/auto';
+// Chart.js is loaded globally
 
 // Global variables for charts
 let magnitudeChart = null;

@@ -1,3 +1,145 @@
+// Constants for volcano coordinates and search radius
+const VOLCANOES = {
+    CAMPI_FLEGREI: {
+        latitude: 40.827,
+        longitude: 14.139,
+        radius: 20 // km
+    },
+    SANTORINI: {
+        latitude: 36.4,
+        longitude: 25.396,
+        radius: 20 // km
+    }
+};
+
+const USGS_API_ENDPOINT = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
+
+/**
+* Formats a date object into YYYY-MM-DD format
+* @param {Date} date - The date to format
+* @returns {string} Formatted date string
+*/
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
+}
+
+/**
+* Fetches earthquake data for a specific region
+* @param {Date} startDate - Start date for the query
+* @param {Date} endDate - End date for the query
+* @param {Object} location - Location object with latitude, longitude and radius
+* @returns {Promise<Array>} Array of earthquake data
+*/
+async function fetchEarthquakeData(startDate, endDate, location) {
+    const params = new URLSearchParams({
+        format: 'geojson',
+        starttime: formatDate(startDate),
+        endtime: formatDate(endDate),
+        latitude: location.latitude,
+        longitude: location.longitude,
+        maxradiuskm: location.radius,
+        orderby: 'time'
+    });
+
+    try {
+        const response = await fetch(`${USGS_API_ENDPOINT}?${params}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        return data.features.map(feature => ({
+            time: new Date(feature.properties.time),
+            magnitude: feature.properties.mag,
+            depth: feature.geometry.coordinates[2],
+            latitude: feature.geometry.coordinates[1],
+            longitude: feature.geometry.coordinates[0]
+        }));
+    } catch (error) {
+        console.error('Error fetching earthquake data:', error);
+        throw error;
+    }
+}
+
+/**
+* Fetches earthquake data for Campi Flegrei
+* @param {Date} startDate - Start date for the query
+* @param {Date} endDate - End date for the query
+* @returns {Promise<Array>} Array of earthquake data
+*/
+export function getCampiFlegeiData(startDate, endDate) {
+    return fetchEarthquakeData(startDate, endDate, VOLCANOES.CAMPI_FLEGREI);
+}
+
+/**
+* Fetches earthquake data for Santorini
+* @param {Date} startDate - Start date for the query
+* @param {Date} endDate - End date for the query
+* @returns {Promise<Array>} Array of earthquake data
+*/
+export function getSantoriniData(startDate, endDate) {
+    return fetchEarthquakeData(startDate, endDate, VOLCANOES.SANTORINI);
+}
+
+// Function to format date for USGS API
+const formatDate = (date) => {
+    return date.toISOString().split('T')[0];
+};
+
+// Get earthquake data for Campi Flegrei
+export async function getCampiFlegeiData(startDate, endDate) {
+    const baseUrl = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
+    const params = new URLSearchParams({
+        format: 'geojson',
+        starttime: formatDate(startDate),
+        endtime: formatDate(endDate),
+        latitude: 40.827,
+        longitude: 14.139,
+        maxradiuskm: 10,
+        minmagnitude: 0
+    });
+
+    try {
+        const response = await fetch(`${baseUrl}?${params}`);
+        const data = await response.json();
+        return data.features.map(feature => ({
+            magnitude: feature.properties.mag,
+            time: new Date(feature.properties.time),
+            depth: feature.geometry.coordinates[2]
+        }));
+    } catch (error) {
+        console.error('Error fetching Campi Flegrei data:', error);
+        return [];
+    }
+}
+
+// Get earthquake data for Santorini
+export async function getSantoriniData(startDate, endDate) {
+    const baseUrl = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
+    const params = new URLSearchParams({
+        format: 'geojson',
+        starttime: formatDate(startDate),
+        endtime: formatDate(endDate),
+        latitude: 36.4,
+        longitude: 25.4,
+        maxradiuskm: 20,
+        minmagnitude: 0
+    });
+
+    try {
+        const response = await fetch(`${baseUrl}?${params}`);
+        const data = await response.json();
+        return data.features.map(feature => ({
+            magnitude: feature.properties.mag,
+            time: new Date(feature.properties.time),
+            depth: feature.geometry.coordinates[2]
+        }));
+    } catch (error) {
+        console.error('Error fetching Santorini data:', error);
+        return [];
+    }
+}
+
 // Constants for volcano locations and search parameters
 const VOLCANOES = {
     CAMPI_FLEGREI: {
